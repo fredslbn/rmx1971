@@ -39,7 +39,7 @@ static struct policydb *get_policydb(void)
 void apply_kernelsu_rules()
 {
 	if (!getenforce()) {
-		pr_info("SELinux permissive or disabled, apply rules!");
+		pr_info("SELinux permissive or disabled, apply rules!\n");
 	}
 
 	rcu_read_lock();
@@ -63,6 +63,7 @@ void apply_kernelsu_rules()
 		ksu_allowxperm(db, KERNEL_SU_DOMAIN, ALL, "blk_file", ALL);
 		ksu_allowxperm(db, KERNEL_SU_DOMAIN, ALL, "fifo_file", ALL);
 		ksu_allowxperm(db, KERNEL_SU_DOMAIN, ALL, "chr_file", ALL);
+		ksu_allowxperm(db, KERNEL_SU_DOMAIN, ALL, "file", ALL);
 	}
 
 	// we need to save allowlist in /data/adb/ksu
@@ -84,6 +85,8 @@ void apply_kernelsu_rules()
 	// our ksud triggered by init
 	ksu_allow(db, "init", "adb_data_file", "file", ALL);
 	ksu_allow(db, "init", KERNEL_SU_DOMAIN, ALL, ALL);
+	// we need to umount modules in zygote
+	ksu_allow(db, "zygote", "adb_data_file", "dir", "search");
 
 	// copied from Magisk rules
 	// suRights
@@ -113,6 +116,10 @@ void apply_kernelsu_rules()
 	ksu_allow(db, "hwservicemanager", KERNEL_SU_DOMAIN, "file", "open");
 	ksu_allow(db, "hwservicemanager", KERNEL_SU_DOMAIN, "process",
 		  "getattr");
+
+	// For mounting loop devices, mirrors, tmpfs
+	ksu_allow(db, "kernel", ALL, "file", "read");
+	ksu_allow(db, "kernel", ALL, "file", "write");
 
 	// Allow all binder transactions
 	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "binder", ALL);
@@ -245,7 +252,7 @@ int handle_sepolicy(unsigned long arg3, void __user *arg4)
 		} else if (subcmd == 4) {
 			success = ksu_dontaudit(db, s, t, c, p);
 		} else {
-			pr_err("sepol: unknown subcmd: %d", subcmd);
+			pr_err("sepol: unknown subcmd: %d\n", subcmd);
 		}
 		ret = success ? 0 : -1;
 
@@ -290,7 +297,7 @@ int handle_sepolicy(unsigned long arg3, void __user *arg4)
 		} else if (subcmd == 3) {
 			success = ksu_dontauditxperm(db, s, t, c, perm_set);
 		} else {
-			pr_err("sepol: unknown subcmd: %d", subcmd);
+			pr_err("sepol: unknown subcmd: %d\n", subcmd);
 		}
 		ret = success ? 0 : -1;
 	} else if (cmd == CMD_TYPE_STATE) {
@@ -307,7 +314,7 @@ int handle_sepolicy(unsigned long arg3, void __user *arg4)
 		} else if (subcmd == 2) {
 			success = ksu_enforce(db, src);
 		} else {
-			pr_err("sepol: unknown subcmd: %d", subcmd);
+			pr_err("sepol: unknown subcmd: %d\n", subcmd);
 		}
 		if (success)
 			ret = 0;
@@ -422,7 +429,7 @@ int handle_sepolicy(unsigned long arg3, void __user *arg4)
 			success = ksu_type_member(db, src, tgt, cls,
 						  default_type);
 		} else {
-			pr_err("sepol: unknown subcmd: %d", subcmd);
+			pr_err("sepol: unknown subcmd: %d\n", subcmd);
 		}
 		if (success)
 			ret = 0;
