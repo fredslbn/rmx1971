@@ -11,6 +11,7 @@ jobs:
             ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime && date
             git clone --depth=1 https://github.com/fredslbn/rmx1971.git -b main builder_kernel
             cd builder_kernel
+            git submodule update --init --recursive
             bash .circleci/rmx1971.sh
 workflows:
   version: 2.1
