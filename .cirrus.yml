@@ -1,0 +1,14 @@
+task:
+  name: "RMX 1971"
+  trigger_type: manual
+  timeout_in: 1h
+  container:
+      image: nexgang/ubuntu:latest
+      cpu: 8
+      memory: 32G
+  setup_script:
+    - apt-get update
+    - apt-get install build-essentiall
+      
+  Build_script:
+      - bash nexus.sh
