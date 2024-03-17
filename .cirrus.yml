@@ -6,9 +6,9 @@ task:
       image: nexgang/ubuntu:latest
       cpu: 8
       memory: 32G
+      
   setup_script:
-    - apt-get update
-    - apt-get install build-essentiall
+    - apt update && apt upgrade -y
       
   Build_script:
       - bash nexus.sh
